@@ -21,7 +21,19 @@ public class MovieDTO {
 	private int year = 0;
 	private Set<String> genres = new HashSet<String>();
 	private List<CharacterDTO> characters = new ArrayList<CharacterDTO>();
-	
+
+	public MovieDTO() {
+	}
+
+	public MovieDTO(Long id, String title, String type, int year, Set<String> genres, List<CharacterDTO> characters) {
+		this.id = id;
+		this.title = title;
+		this.type = type;
+		this.year = year;
+		this.genres = genres;
+		this.characters = characters;
+	}
+
 	public Long getId() {
 		return id;
 	}

@@ -3,7 +3,7 @@ package de.hsh.dbs2.imdb.entities;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "class_table_movie_character")
+@Table(name = "joined_table_movie_character")
 public class MovieCharacter {
 
     @Id

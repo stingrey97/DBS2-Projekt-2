@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "class_table_movie")
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Table(name = "joined_table_movie")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Movie {
 
     @Id

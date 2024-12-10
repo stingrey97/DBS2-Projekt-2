@@ -4,6 +4,7 @@ import javax.swing.SwingUtilities;
 
 import de.hsh.dbs2.imdb.gui.SearchMovieDialog;
 import de.hsh.dbs2.imdb.gui.SearchMovieDialogCallback;
+import de.hsh.dbs2.imdb.util.HibernateConnection;
 
 public class StarterGUI {
 
@@ -19,7 +20,10 @@ public class StarterGUI {
 				new StarterGUI().run();
 			}
 		});
-	
+
+		// Startup Hibernate
+		HibernateConnection.get();
+
 	}
 	
 	public void run() {

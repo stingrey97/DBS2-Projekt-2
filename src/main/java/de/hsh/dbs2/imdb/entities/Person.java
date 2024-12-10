@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "class_table_person")
+@Table(name = "joined_table_person")
 public class Person {
 
     @Id
@@ -21,6 +21,13 @@ public class Person {
 
     @OneToMany(mappedBy = "person", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     private Set<MovieCharacter> movieCharacters = new HashSet<>();
+
+    public Person() {
+    }
+
+    public Person(String name) {
+        this.name = name;
+    }
 
     public void addMovieCharacter(MovieCharacter movieCharacter) {
         this.movieCharacters.add(movieCharacter);

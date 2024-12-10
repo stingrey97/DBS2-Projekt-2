@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "class_table_genre")
+@Table(name = "joined_table_genre")
 public class Genre {
 
     @Id
@@ -17,8 +17,16 @@ public class Genre {
     private String genre;
 
     @ManyToMany
-    @JoinTable(name = "class_table_has_genre")
+    @JoinTable(name = "joined_table_has_genre")
     private Set<Movie> movies = new HashSet<>();
+
+    public Genre() {
+    }
+
+    public Genre(String genre, Movie movies) {
+        this.genre = genre;
+        this.addMovies(movies);
+    }
 
     public void addMovies(Movie movie) {
         this.movies.add(movie);
