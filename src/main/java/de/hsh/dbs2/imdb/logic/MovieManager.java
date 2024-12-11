@@ -84,8 +84,8 @@ public class MovieManager {
             // Update Genres
             movie.getGenres().clear(); // Clear existing genres
             for (String genreName : movieDTO.getGenres()) {
-                Genre genre = em.createQuery("SELECT g FROM Genre g WHERE g.genre = :genre", Genre.class)
-                        .setParameter("genre", genreName)
+                Genre genre = em.createQuery("SELECT g FROM Genre g WHERE TRIM(LOWER(g.genre)) = :genre", Genre.class)
+                        .setParameter("genre", genreName.trim().toLowerCase())
                         .getResultStream()
                         .findFirst()
                         .orElse(new Genre(genreName, movie)); // Create new Genre if not exists
@@ -100,8 +100,8 @@ public class MovieManager {
                 character.setAlias(characterDTO.getAlias());
 
                 // Fetch or create Person
-                Person person = em.createQuery("SELECT p FROM Person p WHERE p.name = :name", Person.class)
-                        .setParameter("name", characterDTO.getPlayer())
+                Person person = em.createQuery("SELECT p FROM Person p WHERE TRIM(LOWER(p.name)) = :name", Person.class)
+                        .setParameter("name", characterDTO.getPlayer().trim().toLowerCase())
                         .getResultStream()
                         .findFirst()
                         .orElse(new Person(characterDTO.getPlayer()));
