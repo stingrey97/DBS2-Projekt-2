@@ -2,13 +2,13 @@
 Was sind jeweils Vor- und Nachteile der entsprechenden Realisierung der Vererbung in Bezug auf das Datenmodell?  
 Welche Variante würden wir in der Praxis für am besten geeignet halten?
 
-### Überlegungen aus Sicht einer Studentengruppe
+### Überlegungen
 
 #### 1. JOINED TABLE (Getrennte Tabellen für jede Klasse mit Verknüpfung über Joins)
 **Vorteile:**
-- Klar strukturierte Datenhaltung durch separate Tabellen je Klasse.
+- Klar strukturiertes Datenmodell durch separate Tabellen je Klasse.
 - Änderungen an einer Unterklasse beeinflussen andere Klassen nur indirekt.
-- Durch Fremdschlüsselbeziehungen ist eine hohe Datenintegrität gewährleistet.
+- Klare Beziehungen durch Fremdschlüssel.
 - Spezifische Abfragen auf einzelne Unterklassen lassen sich effizient durchführen.
 
 **Nachteile:**
@@ -22,10 +22,12 @@ Welche Variante würden wir in der Praxis für am besten geeignet halten?
 **Vorteile:**
 - Keine Joins erforderlich, da alle Daten in einer Tabelle gespeichert sind.
 - Abfragen über sämtliche Vererbungsebenen lassen sich sehr effizient durchführen.
+  - Höhere Performance.
 - Das Schema ist einfach gehalten, da es nur eine Tabelle gibt.
 
 **Nachteile:**
-- Viele Spalten werden von einigen Unterklassen nicht genutzt, was zu Redundanz führt.
+- Viele Spalten werden von einigen Unterklassen nicht genutzt, was zu vielen Null-Werten führt.
+  - Not-Null Constraints in Unterklassen nicht möglich, da nicht jedes Attribut nicht zu jeder Klasse gehört und dementsprechend nicht immer existiert.
 - Änderungen an einer Unterklasse haben potenziell Auswirkungen auf die gesamte Tabelle.
 - Mit zunehmender Anzahl an Unterklassen kann die Tabelle sehr groß und schwer handhabbar werden.
 - Das Modell ist weniger stark normalisiert.
@@ -36,12 +38,15 @@ Welche Variante würden wir in der Praxis für am besten geeignet halten?
 **Vorteile:**
 - Jede Klasse wird in einer eigenen Tabelle abgebildet, was einer normalisierten Struktur entspricht.
 - Abfragen, die sich nur auf eine Unterklasse beziehen, können effizient durchgeführt werden.
+  - Höhere Performance.
 - Änderungen an einer Klasse bleiben auf deren Tabelle beschränkt.
 
 **Nachteile:**
-- Es existiert keine zentrale Tabelle für Abfragen über die gesamte Vererbungshierarchie.
-- Gemeinsame Attribute müssen in jeder Tabelle erneut angelegt werden, was Redundanz erzeugt.
-- Polymorphe Abfragen sind komplex, da sie Union-Operationen über mehrere Tabellen benötigen.
+- Abfragen der gesamten Objekte werden komplexer, da Union-Operationen notwendig sind.
+- Gemeinsame Attribute müssen in jeder Tabelle erneut angelegt oder geupdated werden, was Redundanz erzeugt.
+- Abbildung von Beziehungen ist schwierig, da keine Fremdschlüssel existieren.
+- Da Subklassen Primärschlüssel der Superklasse als eigenen Primärschlüssel haben, ist die globale Eindeutigkeit des Primärschlüssels schwierig.
+
 
 ---
 

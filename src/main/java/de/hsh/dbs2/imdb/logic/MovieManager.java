@@ -27,8 +27,8 @@ public class MovieManager {
         List<MovieDTO> movieDTOs = new ArrayList<>();
         try {
             em.getTransaction().begin();
-            TypedQuery<Movie> q = em.createQuery("SELECT m FROM Movie m WHERE m.title LIKE :search", Movie.class);
-            q.setParameter("search", "%" + search + "%");
+            TypedQuery<Movie> q = em.createQuery("SELECT m FROM Movie m WHERE LOWER(m.title) LIKE :search", Movie.class);
+            q.setParameter("search", "%" + search.toLowerCase() + "%");
             movies = q.getResultList();
             em.getTransaction().commit();
         } finally {
@@ -165,7 +165,7 @@ public class MovieManager {
                 }
                 movie.getGenres().clear(); // Leert die Genres-Collection im Movie
 
-                // Entferne das Movie-Objekt (orphanRemoval sorgt für MovieCharacters)
+                // Entferne das Movie-Objekt (orphanRemoval sorgt für Löschen der MovieCharacters)
                 em.remove(movie);
             } else {
                 System.out.println("Movie mit ID " + movieId + " existiert nicht.");
@@ -206,6 +206,7 @@ public class MovieManager {
             }
 
             movieDTO = new MovieDTO(movie.getId(), movie.getTitle(), "" + movie.getType(), movie.getYear(), genreStrings, characterDTOs);
+            em.getTransaction().commit();
         } finally {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             HibernateConnection.close();
