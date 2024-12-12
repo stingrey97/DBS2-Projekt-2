@@ -16,22 +16,20 @@ public class Genre {
     @Column(name = "genre")
     private String genre;
 
-    @ManyToMany
-    @JoinTable(name = "joined_table_has_genre")
+    @ManyToMany(mappedBy = "genres")
     private Set<Movie> movies = new HashSet<>();
 
-    public Genre() {
-    }
-
-    public Genre(String genre, Movie movies) {
-        this.genre = genre;
-        this.addMovies(movies);
-    }
-
-    public void addMovies(Movie movie) {
+    public void addMovie(Movie movie) {
         this.movies.add(movie);
         if (!movie.getGenres().contains(this)) {
             movie.addGenre(this);
+        }
+    }
+
+    public void removeMovie(Movie movie) {
+        this.movies.remove(movie);
+        if (movie.getGenres().contains(this)) {
+            movie.removeGenre(this);
         }
     }
 

@@ -1,9 +1,6 @@
 package de.hsh.dbs2.imdb.logic;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import de.hsh.dbs2.imdb.entities.Genre;
 import de.hsh.dbs2.imdb.entities.Movie;
@@ -69,59 +66,80 @@ public class MovieManager {
         try {
             em.getTransaction().begin();
 
-            Movie movie = null;
-
-            if (movieDTO.getId() == null) {
-                movie = new Movie();
-            } else {
+            Movie movie;
+            // Movie existiert in DB
+            if (movieDTO.getId() != null) {
                 movie = em.find(Movie.class, movieDTO.getId());
+
+                // Movie komplett leeren
+                movie.getMovieCharacters().clear();
+                for (Genre genre : movie.getGenres()) {
+                    genre.getMovies().remove(movie);
+                }
+                movie.getGenres().clear();
+
+                // Movie existiert noch nicht in DB
+            } else {
+                movie = new Movie();
             }
 
+            // Einfache Informationen im Movie speichern
             movie.setTitle(movieDTO.getTitle());
             movie.setYear(movieDTO.getYear());
             movie.setType(movieDTO.getType().charAt(0));
 
-            // Update Genres
-            movie.getGenres().clear(); // Clear existing genres
-            for (String genreName : movieDTO.getGenres()) {
-                Genre genre = em.createQuery("SELECT g FROM Genre g WHERE TRIM(LOWER(g.genre)) = :genre", Genre.class)
-                        .setParameter("genre", genreName.trim().toLowerCase())
-                        .getResultStream()
-                        .findFirst()
-                        .orElse(new Genre(genreName, movie)); // Create new Genre if not exists
-                movie.getGenres().add(genre);
+            // Genres im Movie speichern:
+
+            // Alle Genres holen
+            List<Genre> allGenres = em.createQuery("SELECT g FROM Genre g", Genre.class).getResultList();
+            Map<String, Genre> knownGenres = new HashMap<>();
+            for (Genre genre : allGenres) {
+                knownGenres.put(genre.getGenre(), genre);
             }
 
-            // Update Characters
-            movie.getMovieCharacters().clear(); // Clear existing characters
-            for (CharacterDTO characterDTO : movieDTO.getCharacters()) {
-                MovieCharacter character = new MovieCharacter();
-                character.setCharacter(characterDTO.getCharacter());
-                character.setAlias(characterDTO.getAlias());
+            // Für alle Genres des DTO Objekts
+            for (String dtoGenreString : movieDTO.getGenres()) {
+                // Wenn Genre noch nicht in DB: In DB einfügen und Movie verknüpfen
+                if (!knownGenres.containsKey(dtoGenreString)) {
+                    Genre newGenre = new Genre();
+                    newGenre.setGenre(dtoGenreString);
+                    newGenre.addMovie(movie);
+                    em.persist(newGenre);
+                    // Zu bestehenden Genre das Movie hinzufügen
+                } else {
+                    knownGenres.get(dtoGenreString).addMovie(movie);
+                }
+            }
 
-                // Fetch or create Person
-                Person person = em.createQuery("SELECT p FROM Person p WHERE TRIM(LOWER(p.name)) = :name", Person.class)
-                        .setParameter("name", characterDTO.getPlayer().trim().toLowerCase())
-                        .getResultStream()
-                        .findFirst()
-                        .orElse(new Person(characterDTO.getPlayer()));
-                character.setPerson(person);
-
-                character.setMovie(movie);
-                movie.getMovieCharacters().add(character);
-
+            // MovieCharacters im Movie speichern
+            List<CharacterDTO> characterDTOs = movieDTO.getCharacters();
+            // Für alle Characters des DTO Objekts
+            for (CharacterDTO characterDTO : characterDTOs) {
+                // Erzeuge neuen MovieCharacter, da diese nie vorher existieren (gelöscht)
+                MovieCharacter movieCharacter = new MovieCharacter();
+                movieCharacter.setMovie(movie);
+                movieCharacter.setAlias(characterDTO.getAlias());
+                movieCharacter.setCharacter(characterDTO.getCharacter());
                 em.persist(movie);
+
+                // Gibt es die Person / Player schon?
+                TypedQuery<Person> personQuery = em.createQuery("SELECT p FROM Person p WHERE p.name = :name", Person.class);
+                personQuery.setParameter("name", characterDTO.getPlayer());
+                Person person = personQuery.getSingleResult();
+                // Wenn nein, neue Person anlegen
+                if (person == null) {
+                    person = new Person();
+                    person.setName(characterDTO.getPlayer());
+                    person.setSex('?');
+                }
+                // Und zum MovieCharacter adden
+                person.addMovieCharacter(movieCharacter);
             }
 
-            // Persist or merge the Movie entity
-            if (movie.getId() == null) {
-                em.persist(movie);
-            } else {
-                em.merge(movie);
-            }
+            em.persist(movie);
             em.getTransaction().commit();
-
         } finally {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             HibernateConnection.close();
         }
     }
@@ -137,8 +155,21 @@ public class MovieManager {
         try {
             em.getTransaction().begin();
 
+            // Lade das Movie-Objekt
             Movie movie = em.find(Movie.class, movieId);
-            if (movie != null) em.remove(movie);
+
+            if (movie != null) {
+                // Entferne die Verknüpfungen zu Genres
+                for (Genre genre : movie.getGenres()) {
+                    genre.getMovies().remove(movie); // Entfernt Movie aus Genre
+                }
+                movie.getGenres().clear(); // Leert die Genres-Collection im Movie
+
+                // Entferne das Movie-Objekt (orphanRemoval sorgt für MovieCharacters)
+                em.remove(movie);
+            } else {
+                System.out.println("Movie mit ID " + movieId + " existiert nicht.");
+            }
 
             em.getTransaction().commit();
         } finally {
@@ -158,9 +189,13 @@ public class MovieManager {
         MovieDTO movieDTO;
         try {
             em.getTransaction().begin();
+
             Movie movie = em.find(Movie.class, movieId);
 
+            if (movie == null) return null;
+
             Set<String> genreStrings = new HashSet<>();
+
             for (Genre genre : movie.getGenres()) {
                 genreStrings.add(genre.getGenre());
             }

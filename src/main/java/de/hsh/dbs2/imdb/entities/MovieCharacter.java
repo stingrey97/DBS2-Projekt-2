@@ -19,7 +19,7 @@ public class MovieCharacter {
     @Column(name = "position")
     private int position;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     private Movie movie;
 
     @ManyToOne(cascade = CascadeType.PERSIST)
@@ -27,7 +27,7 @@ public class MovieCharacter {
 
     public void setMovie(Movie movie) {
         this.movie = movie;
-        if (!movie.getMovieCharacters().contains(this)) {
+        if (movie != null && !movie.getMovieCharacters().contains(this)) {
             movie.addMovieCharacter(this);
         }
     }

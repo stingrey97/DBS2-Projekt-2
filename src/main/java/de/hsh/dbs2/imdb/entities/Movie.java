@@ -3,6 +3,7 @@ package de.hsh.dbs2.imdb.entities;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -23,11 +24,16 @@ public class Movie {
     @Column(name = "type")
     private char type;
 
-    @ManyToMany(mappedBy = "movies", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
-    private Set<Genre> genres = new HashSet<>();
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "joined_table_has_genre",
+            joinColumns = @JoinColumn(name = "movies_id"),
+            inverseJoinColumns = @JoinColumn(name = "genres_id")
+    )
+    private final Set<Genre> genres = new HashSet<>();
 
-    @OneToMany(mappedBy = "movie", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
-    private Set<MovieCharacter> movieCharacters = new HashSet<>();
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private final Set<MovieCharacter> movieCharacters = new HashSet<>();
 
     public Movie() {
     }
@@ -39,7 +45,14 @@ public class Movie {
     public void addGenre(Genre genre) {
         this.genres.add(genre);
         if (!genre.getMovies().contains(this)) {
-            genre.addMovies(this);
+            genre.addMovie(this);
+        }
+    }
+
+    public void removeGenre(Genre genre) {
+        this.genres.remove(genre);
+        if (genre.getMovies().contains(this)) {
+            genre.removeMovie(this);
         }
     }
 
@@ -82,5 +95,18 @@ public class Movie {
 
     public Set<MovieCharacter> getMovieCharacters() {
         return movieCharacters;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Movie movie = (Movie) o;
+        return Objects.equals(id, movie.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

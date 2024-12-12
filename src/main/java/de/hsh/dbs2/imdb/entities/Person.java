@@ -19,15 +19,8 @@ public class Person {
     @Column(name = "sex")
     private char sex;
 
-    @OneToMany(mappedBy = "person", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "person")
     private Set<MovieCharacter> movieCharacters = new HashSet<>();
-
-    public Person() {
-    }
-
-    public Person(String name) {
-        this.name = name;
-    }
 
     public void addMovieCharacter(MovieCharacter movieCharacter) {
         this.movieCharacters.add(movieCharacter);
